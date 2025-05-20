@@ -1,5 +1,3 @@
-# LightlyGPT
-
 LightlyGPT is an AI-powered image analysis tool that combines advanced vision and language models to help you explore, search, and analyze your image collections interactively.
 
 ## Features

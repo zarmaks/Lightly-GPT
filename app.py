@@ -339,8 +339,8 @@ if st.session_state.processed:
 # Add explanation in sidebar
 with st.sidebar:
     # Add company logo at the top of the sidebar
-    st.image(r"C:\Users\zarma\Downloads\Lightly_logo_small.png", width=200)
-    
+    st.image(r"assets\Lightly_logo.png", width=200)
+
     st.subheader("LightlyGPT")
     st.markdown("""
     **LightlyGPT** is an AI-powered image analysis tool that combines:
