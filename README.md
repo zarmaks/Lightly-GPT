@@ -1,9 +1,11 @@
+# LightlyGPT
+
 LightlyGPT is an AI-powered image analysis tool that combines advanced vision and language models to help you explore, search, and analyze your image collections interactively.
 
 ## Features
 
 - **CLIP Model**: Understands image content for semantic search and analysis
-- **GPT-4o**: Provides intelligent, conversational reasoning about your images
+- **gpt-4.1-nano**: Provides intelligent, conversational reasoning about your images
 - **LangChain**: Manages complex workflows and tool selection
 - **ChromaDB**: Efficient storage and retrieval of image embeddings
 - **Agent Architecture**: Dynamically chooses the right tool for each task

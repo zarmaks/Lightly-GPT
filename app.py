@@ -43,119 +43,17 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Initialize session state variables
-if 'uploaded_images' not in st.session_state:
-    st.session_state.uploaded_images = []
-if 'processed' not in st.session_state:
-    st.session_state.processed = False
-if 'chroma_client' not in st.session_state:
-    # Create a data directory for ChromaDB
-    home_dir = os.path.expanduser("~")
-    chroma_data_dir = os.path.join(home_dir, "agent4o_clip_data")
-    os.makedirs(chroma_data_dir, exist_ok=True)
-    st.session_state.chroma_client = chromadb.PersistentClient(
-        path=chroma_data_dir,
-        settings=chromadb.Settings(anonymized_telemetry=False)
-    )
-if 'collection' not in st.session_state:
-    st.session_state.collection = None
-if 'image_metadata' not in st.session_state:
-    st.session_state.image_metadata = {}
-if 'clip_model' not in st.session_state:
-    st.session_state.clip_model = None
-if 'clip_processor' not in st.session_state:
-    st.session_state.clip_processor = None
-if 'messages' not in st.session_state:
-    st.session_state.messages = []
-if 'agent' not in st.session_state:
-    st.session_state.agent = None
+# Import session state utilities
+from utils.session_utils import initialize_session_state, validate_session_files
 
-# Function to validate file extensions in session state
-def validate_session_files():
-    """Clean up session state to ensure only files with valid extensions remain"""
-    if 'uploaded_images' in st.session_state and st.session_state.uploaded_images:
-        valid_files = []
-        for file in st.session_state.uploaded_images:
-            try:
-                # Check if file is valid and has valid extension
-                if hasattr(file, 'name'):
-                    ext = os.path.splitext(file.name)[1].lower()
-                    if ext in ['.jpg', '.jpeg', '.png', '.bmp', '.webp']:
-                        valid_files.append(file)
-            except:
-                # Skip any files that cause errors
-                pass
-        
-        # Update session state with only valid files
-        st.session_state.uploaded_images = valid_files
+# Initialize all session state variables centrally
+initialize_session_state()
 
 # Validate files in session state
 validate_session_files()
 
-# Function to initialize agent tools
-def initialize_agent_tools():
-    """Initialize LangChain agent with tools for image analysis"""
-    
-    # Define tools
-    tools = [
-        Tool(
-            name="ImageSearch",
-            func=clip_image_search_tool,
-            description="Search for images matching a description or concept using CLIP embeddings. Input should be a natural language description of what you're looking for."
-        ),
-        Tool(
-            name="ColorAnalysis",
-            func=analyze_image_colors,
-            description="Analyze the dominant colors in specified images. Input should be a comma-separated list of image indices."
-        ),
-        Tool(
-            name="BWDetection",
-            func=detect_bw_images,
-            description="Detect which images are black and white or grayscale. No input required."
-        ),
-        Tool(
-            name="DuplicateDetection",
-            func=find_duplicate_images,
-            description="Find duplicate or very similar images. Input should be a similarity threshold (1-10, where 10 is most strict)."
-        ),
-        Tool(
-            name="DateTimeFilter",
-            func=filter_by_datetime,
-            description="Filter images by date/time they were taken. Input should be a date range in format 'YYYY-MM-DD to YYYY-MM-DD'."
-        ),
-        Tool(
-            name="LocationFilter",
-            func=filter_by_location,
-            description="Filter images by location. Input should be either coordinates or a place name."
-        ),
-        Tool(
-            name="ImageVisualization",
-            func=create_tsne_visualization,
-            description="Create a t-SNE visualization showing relationships between images. No input required."
-        ),
-        Tool(
-            name="ImageClustering",
-            func=create_image_clusters,
-            description="Group similar images into clusters. Input should be the number of clusters (2-10)."
-        ),
-    ]
-    
-    # Setup memory
-    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-    
-    # Initialize the agent
-    llm = ChatOpenAI(model="gpt-4o", temperature=0.3)
-    agent = initialize_agent(
-        tools, 
-        llm, 
-        agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
-        verbose=True,
-        memory=memory,
-        handle_parsing_errors=True
-    )
-    
-    st.session_state.agent = agent
-    return agent
+# Import our new configuration utility
+from utils.config_utils import initialize_agent_tools
 
 # Main title
 st.title("🔆 LightlyGPT - Agentic AI tool for Image Analysis")
@@ -346,7 +244,7 @@ with st.sidebar:
     **LightlyGPT** is an AI-powered image analysis tool that combines:
     
     1. **CLIP Model**: For understanding image content
-    2. **GPT-4o**: For intelligent reasoning about images
+    2. **gpt-4.1-nano**: For intelligent reasoning about images
     3. **LangChain**: For managing complex workflows
     4. **ChromaDB**: For efficient image storage and retrieval  
     5. **Agent Architecture**: To choose the right tool for each task

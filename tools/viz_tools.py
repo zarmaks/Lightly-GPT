@@ -31,12 +31,12 @@ except ImportError:
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.ui_utils import plot_image_clusters
 
-def create_tsne_visualization(n_clusters_str="3"):
+def create_tsne_visualization(selection_or_n_clusters="3"):
     """
     Create t-SNE visualization of image relationships
     
     Args:
-        n_clusters_str: Number of clusters to create (1-10)
+        selection_or_n_clusters: Can be a number of clusters (default), 'use last filtered set', or a comma-separated list of indices
         
     Returns:
         String with embedded visualization
@@ -59,12 +59,20 @@ def create_tsne_visualization(n_clusters_str="3"):
         return "No images uploaded. Please upload images first."
     
     try:
-        # Parse number of clusters
-        try:
-            n_clusters = min(10, max(1, int(n_clusters_str)))
-        except:
-            n_clusters = 3  # Default to 3 clusters if parsing fails
-        
+        # Determine if the input is a special reference or a number
+        if isinstance(selection_or_n_clusters, str) and selection_or_n_clusters.strip().lower() in ["use last filtered set", "use last", "previous", "last"]:
+            filtered_indices = getattr(st.session_state, 'last_filtered_indices', None)
+            n_clusters = 3
+        elif isinstance(selection_or_n_clusters, str) and all(x.strip().isdigit() for x in selection_or_n_clusters.split(",")):
+            filtered_indices = [int(x.strip()) for x in selection_or_n_clusters.split(",") if x.strip().isdigit()]
+            n_clusters = 3
+        else:
+            filtered_indices = getattr(st.session_state, 'last_filtered_indices', None)
+            try:
+                n_clusters = min(10, max(1, int(selection_or_n_clusters)))
+            except:
+                n_clusters = 3
+
         # Get all embeddings from ChromaDB
         results = st.session_state.collection.get(
             include=["embeddings", "metadatas"],
@@ -77,6 +85,15 @@ def create_tsne_visualization(n_clusters_str="3"):
         # Extract embeddings and metadata
         embeddings = np.array(results["embeddings"])
         metadatas = results["metadatas"]
+        
+        if filtered_indices is not None and len(filtered_indices) > 0:
+            embeddings = embeddings[filtered_indices]
+            metadatas = [metadatas[i] for i in filtered_indices]
+            images = [st.session_state.uploaded_images[i] for i in filtered_indices]
+        elif filtered_indices is not None and len(filtered_indices) == 0:
+            return "No images to visualize from the previous filter. Please run a filter tool first."
+        else:
+            images = st.session_state.uploaded_images
         
         # Create t-SNE projection
         tsne = TSNE(n_components=2, perplexity=min(30, max(3, len(embeddings)-1)), 
@@ -93,7 +110,7 @@ def create_tsne_visualization(n_clusters_str="3"):
             clusters = np.zeros(len(projections), dtype=int)
         
         # Use our UI utility to create an interactive plot with thumbnails
-        plot_image_clusters(projections, clusters, st.session_state.uploaded_images)
+        plot_image_clusters(projections, clusters, images)
         
         return f"t-SNE visualization created with {n_clusters} clusters. Images that are closer together are more similar visually."
         

@@ -127,6 +127,9 @@ def filter_by_datetime(date_range_str):
             else:
                 no_date_indices.append(idx)
         
+        # Store filtered indices in session state for conversational memory
+        st.session_state.last_filtered_indices = filtered_indices
+
         # Generate response
         if not filtered_indices:
             response = f"No images found taken between {parts[0]} and {parts[1]}."
@@ -211,6 +214,9 @@ def filter_by_location(location_input):
         # Sort by distance
         filtered_indices.sort(key=lambda x: x[1])
         
+        # Store filtered indices in session state for conversational memory
+        st.session_state.last_filtered_indices = [idx for idx, _ in filtered_indices]
+
         # Generate response
         if not filtered_indices:
             response = f"No images found near {location_input}."

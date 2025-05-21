@@ -50,6 +50,9 @@ def clip_image_search_tool(query):
         # Extract results
         image_indices = [int(img_id.split("_")[1]) for img_id in results["ids"][0]]
         
+        # Store found indices in session state for conversational memory
+        st.session_state.last_filtered_indices = image_indices
+
         # Generate response with image descriptions
         response = f"I found {len(image_indices)} images matching '{query}':\n\n"
         
