@@ -67,3 +67,9 @@ def validate_session_files():
         
         # Update session state with only valid files
         st.session_state.uploaded_images = valid_files
+
+def get_active_indices():
+    """Return indices of currently active (filtered) images"""
+    if hasattr(st.session_state, "last_filtered_indices") and st.session_state.last_filtered_indices:
+        return st.session_state.last_filtered_indices
+    return list(range(len(st.session_state.uploaded_images)))

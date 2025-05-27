@@ -11,6 +11,7 @@ from PIL import Image, ImageStat
 from utils import setup_project_path, validate_session_requirements, requires_session_setup
 from utils.error_utils import handle_tool_errors
 from utils.path_utils import check_dependency
+from utils.session_utils import get_active_indices
 
 # Ensure path is set up correctly
 setup_project_path()
@@ -42,7 +43,7 @@ def analyze_image_colors(image_indices_str="use last filtered set"):
 
     # Support 'use last filtered set' or explicit indices
     if isinstance(image_indices_str, str) and image_indices_str.strip().lower() in ["use last filtered set", "use last", "previous", "last"]:
-        indices = getattr(st.session_state, 'last_filtered_indices', None)
+        indices = get_active_indices()
         if not indices:
             return "No previous filtered set found. Please run a filter or search first."
     elif isinstance(image_indices_str, str) and ',' in image_indices_str:
@@ -50,7 +51,7 @@ def analyze_image_colors(image_indices_str="use last filtered set"):
     elif isinstance(image_indices_str, str) and image_indices_str.strip().isdigit():
         indices = [int(image_indices_str.strip())]
     else:
-        indices = getattr(st.session_state, 'last_filtered_indices', None)
+        indices = get_active_indices()
         if not indices:
             return "No valid image indices provided."
 
@@ -116,17 +117,13 @@ def detect_bw_images(image_indices_str="use last filtered set"):
     """
     # Support 'use last filtered set' or explicit indices
     if isinstance(image_indices_str, str) and image_indices_str.strip().lower() in ["use last filtered set", "use last", "previous", "last"]:
-        indices = getattr(st.session_state, 'last_filtered_indices', None)
-        if not indices:
-            indices = list(range(len(st.session_state.uploaded_images)))
+        indices = get_active_indices()
     elif isinstance(image_indices_str, str) and ',' in image_indices_str:
         indices = [int(idx.strip()) for idx in image_indices_str.split(',') if idx.strip().isdigit()]
     elif isinstance(image_indices_str, str) and image_indices_str.strip().isdigit():
         indices = [int(image_indices_str.strip())]
     else:
-        indices = getattr(st.session_state, 'last_filtered_indices', None)
-        if not indices:
-            indices = list(range(len(st.session_state.uploaded_images)))
+        indices = get_active_indices()
 
     bw_images = []
     filtered_indices = []

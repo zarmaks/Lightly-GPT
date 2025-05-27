@@ -5,6 +5,7 @@ import sys
 import os
 from datetime import datetime
 from PIL import Image, ExifTags
+from utils.session_utils import get_active_indices
 
 import warnings
 warnings.filterwarnings("ignore", message=".*use_column_width.*")
@@ -109,11 +110,12 @@ def filter_by_datetime(date_range_str):
         except:
             return "Invalid date format. Please use 'YYYY-MM-DD to YYYY-MM-DD'."
         
-        # Filter images by date
+        # Use get_active_indices for default behavior
+        active_indices = get_active_indices()
         filtered_indices = []
         no_date_indices = []
-        
-        for idx, img_file in enumerate(st.session_state.uploaded_images):
+        for idx in active_indices:
+            img_file = st.session_state.uploaded_images[idx]
             img_file.seek(0)
             img = Image.open(img_file)
             
@@ -192,11 +194,12 @@ def filter_by_location(location_input):
         # Maximum distance in kilometers
         max_distance = 10
         
-        # Filter images by location
+        # Use get_active_indices for default behavior
+        active_indices = get_active_indices()
         filtered_indices = []
         no_gps_indices = []
-        
-        for idx, img_file in enumerate(st.session_state.uploaded_images):
+        for idx in active_indices:
+            img_file = st.session_state.uploaded_images[idx]
             img_file.seek(0)
             img = Image.open(img_file)
             

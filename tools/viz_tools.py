@@ -30,6 +30,7 @@ except ImportError:
 # Add parent directory to path to enable imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.ui_utils import plot_image_clusters
+from utils.session_utils import get_active_indices
 
 def create_tsne_visualization(selection_or_n_clusters="3"):
     """
@@ -60,14 +61,15 @@ def create_tsne_visualization(selection_or_n_clusters="3"):
     
     try:
         # Determine if the input is a special reference or a number
+        # Use get_active_indices for filtered set
         if isinstance(selection_or_n_clusters, str) and selection_or_n_clusters.strip().lower() in ["use last filtered set", "use last", "previous", "last"]:
-            filtered_indices = getattr(st.session_state, 'last_filtered_indices', None)
+            filtered_indices = get_active_indices()
             n_clusters = 3
         elif isinstance(selection_or_n_clusters, str) and all(x.strip().isdigit() for x in selection_or_n_clusters.split(",")):
             filtered_indices = [int(x.strip()) for x in selection_or_n_clusters.split(",") if x.strip().isdigit()]
             n_clusters = 3
         else:
-            filtered_indices = getattr(st.session_state, 'last_filtered_indices', None)
+            filtered_indices = get_active_indices()
             try:
                 n_clusters = min(10, max(1, int(selection_or_n_clusters)))
             except:
@@ -160,6 +162,10 @@ def create_image_clusters(n_clusters_str="4"):
         # Extract embeddings and metadata
         embeddings = np.array(results["embeddings"])
         metadatas = results["metadatas"]
+        # Filter embeddings and metadatas to active_indices
+        active_indices = get_active_indices()
+        embeddings = embeddings[active_indices]
+        metadatas = [metadatas[i] for i in active_indices]
         
         # Apply KMeans clustering
         kmeans = KMeans(n_clusters=min(n_clusters, len(embeddings)), random_state=42, n_init=10)
@@ -181,7 +187,8 @@ def create_image_clusters(n_clusters_str="4"):
         projections = tsne.fit_transform(embeddings)
         
         # Use our UI utility to create an interactive plot
-        plot_image_clusters(projections, clusters, st.session_state.uploaded_images)
+        images = [st.session_state.uploaded_images[int(metadatas[i]["index"])] for i in range(len(metadatas))]
+        plot_image_clusters(projections, clusters, images)
         
         # Generate response
         response = f"Images grouped into {len(clustered_images)} clusters:\n\n"

@@ -112,6 +112,11 @@ if uploaded_files:
     if new_files:
         st.session_state.processed = False
 
+# Show active filtered set count
+if st.session_state.uploaded_images:
+    active_count = len(st.session_state.last_filtered_indices) if hasattr(st.session_state, "last_filtered_indices") and st.session_state.last_filtered_indices else len(st.session_state.uploaded_images)
+    st.info(f"Ενεργές εικόνες: {active_count} / {len(st.session_state.uploaded_images)}")
+
 # Display uploaded images in a grid
 if st.session_state.uploaded_images:
     st.subheader(f"📊 Uploaded Images ({len(st.session_state.uploaded_images)})")
@@ -128,15 +133,15 @@ if st.session_state.uploaded_images:
                     # Create or get collection
                     collection_name = "clip_images"
                     try:
-                        st.session_state.collection = st.session_state.chroma_client.get_collection(collection_name)
-                        # Clear the collection to start fresh
-                        st.session_state.collection.delete(where={"source": "current_session"})
-                    except:
-                        # Create a new collection if it doesn't exist
-                        st.session_state.collection = st.session_state.chroma_client.create_collection(
-                            name=collection_name,
-                            embedding_function=None  # We'll provide our own embeddings
-                        )
+                        # Always delete the collection to ensure correct metric
+                        st.session_state.chroma_client.delete_collection(collection_name)
+                    except Exception:
+                        pass  # Collection may not exist yet
+                    st.session_state.collection = st.session_state.chroma_client.create_collection(
+                        name=collection_name,
+                        embedding_function=None,  # We'll provide our own embeddings
+                        metadata={"hnsw:space": "cosine"}  # Use cosine distance for CLIP
+                    )
                     
                     # Process each image
                     for i, img_file in enumerate(st.session_state.uploaded_images):
@@ -205,29 +210,25 @@ if st.session_state.processed:
                         # Create a temporary print function that writes to our buffer
                         original_print = print
                         def verbose_print(*args, **kwargs):
-                            thinking_buffer.write(" ".join(map(str, args)) + "\n")
+                            try:
+                                thinking_buffer.write(" ".join(map(str, args)) + "\n")
+                            except ValueError:
+                                pass  # Ignore if buffer is closed
                             original_print(*args, **kwargs)
-                        
                         # Replace print temporarily to capture thinking
                         import builtins
                         builtins.print = verbose_print
-                        
                         # Run the agent
                         response = st.session_state.agent.run(prompt)
-                        
                         # Restore original print
                         builtins.print = original_print
-                        
                         # Get the thinking process
                         thinking_text = thinking_buffer.getvalue()
-                    
                     # Show the agent thinking in an expander
                     show_agent_thinking(thinking_text)
-                    
                     # Show formatted response
                     formatted_response = format_agent_response(response)
                     st.markdown(formatted_response)
-                    
                     # Add assistant response to chat history
                     st.session_state.messages.append({"role": "assistant", "content": response})
                 except Exception as e:
@@ -268,3 +269,8 @@ with st.sidebar:
     - "Show me a visualization of my image collection"
     - "Group similar images into 3 clusters"
     """)
+    
+    # Add reset filters button in sidebar
+    if st.button("🔄 Επαναφορά φίλτρων (Reset filters)"):
+        st.session_state.last_filtered_indices = list(range(len(st.session_state.uploaded_images)))
+        st.success("Τα φίλτρα επανήλθαν. Όλες οι εικόνες είναι ενεργές.")

@@ -11,6 +11,7 @@ warnings.filterwarnings("ignore", message=".*use_column_width.*")
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.clip_utils import generate_text_embedding
 from utils.ui_utils import display_image_grid
+from utils.session_utils import get_active_indices
 
 def clip_image_search_tool(query):
     """
@@ -38,45 +39,54 @@ def clip_image_search_tool(query):
         if text_embedding is None:
             return "Failed to generate text embedding for your query."
         
-        # Search for similar images in ChromaDB
+        # Search for similar images in ChromaDB (top 10 most similar for more flexibility)
         results = st.session_state.collection.query(
             query_embeddings=[text_embedding.tolist()],
-            n_results=5
+            n_results=10
         )
         
         if not results["ids"] or not results["ids"][0]:
             return f"No images matching '{query}' were found."
         
-        # Extract results
-        image_indices = [int(img_id.split("_")[1]) for img_id in results["ids"][0]]
+        # Debug: print/log distances
+        distances = results.get("distances", [None])[0]
+        st.write(f"DEBUG: distances returned: {distances}")
         
-        # Store found indices in session state for conversational memory
-        st.session_state.last_filtered_indices = image_indices
-
-        # Generate response with image descriptions
-        response = f"I found {len(image_indices)} images matching '{query}':\n\n"
+        # Apply similarity threshold (cosine distance, lower is more similar)
+        similarity_threshold = 0.8  # Default threshold, can be made user-adjustable
+        filtered_indices = []
+        filtered_distances = []
+        ids = results["ids"][0]
+        for i, dist in enumerate(distances):
+            if dist is not None and dist < similarity_threshold:
+                idx = int(ids[i].split("_")[1])
+                filtered_indices.append(idx)
+                filtered_distances.append(dist)
+        st.session_state.last_filtered_indices = filtered_indices
         
-        # Prepare lists for image display
+        # Use get_active_indices for search scope (if you want to restrict search to filtered set)
+        active_indices = get_active_indices()
+        
+        # After getting filtered_indices, intersect with active_indices if you want chaining
+        filtered_indices = [idx for idx in filtered_indices if idx in active_indices]
+        st.session_state.last_filtered_indices = filtered_indices
+        
+        response = f"I found {len(filtered_indices)} images matching '{query}' (distance < {similarity_threshold}):\n\n"
         matching_images = []
         captions = []
-        
-        for i, idx in enumerate(image_indices):
+        for i, idx in enumerate(filtered_indices):
             if 0 <= idx < len(st.session_state.uploaded_images):
-                # Add image to the list for display
                 img = st.session_state.uploaded_images[idx]
                 matching_images.append(img)
-                
-                # Create caption with filename
                 filename = img.name
-                captions.append(f"Image {idx}: {filename}")
-                
-                # Also include in text response
-                response += f"Image {idx}: {filename}\n"
+                captions.append(f"Image {idx}: {filename} (distance: {filtered_distances[i]:.2f})")
+                response += f"Image {idx}: {filename} (distance: {filtered_distances[i]:.2f})\n"
         
-        # Display the matching images in a grid
         if matching_images:
             st.write("### Matching Images")
             display_image_grid(matching_images, num_columns=3, captions=captions)
+        else:
+            response += "No images passed the similarity threshold."
         
         return response
     
