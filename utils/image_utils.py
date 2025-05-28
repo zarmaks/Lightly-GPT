@@ -14,21 +14,18 @@ try:
     import cv2
     CV2_AVAILABLE = True
 except ImportError:
-    st.warning("OpenCV (cv2) not found. Some image processing features will be disabled.")
     CV2_AVAILABLE = False
 
 try:
     import imagehash
     IMAGEHASH_AVAILABLE = True
 except ImportError:
-    st.warning("imagehash library not found. Duplicate detection will be disabled.")
     IMAGEHASH_AVAILABLE = False
 
 try:
     from sklearn.cluster import KMeans
     SKLEARN_AVAILABLE = True
 except ImportError:
-    st.warning("scikit-learn not found. Color analysis features will be disabled.")
     SKLEARN_AVAILABLE = False
 
 def resize_image(img, max_size=800):
@@ -44,23 +41,24 @@ def resize_image(img, max_size=800):
     """
     width, height = img.size
     
+    # Check if resizing is needed
+    if width <= max_size and height <= max_size:
+        return img
+    
+    # Calculate new dimensions while maintaining aspect ratio
     if width > height:
-        if width > max_size:
-            new_width = max_size
-            new_height = int(height * (max_size / width))
+        new_width = max_size
+        new_height = int(height * (max_size / width))
     else:
-        if height > max_size:
-            new_height = max_size
-            new_width = int(width * (max_size / height))
+        new_height = max_size
+        new_width = int(width * (max_size / height))
     
-    if width > max_size or height > max_size:
-        try:
-            return img.resize((new_width, new_height), Image.Resampling.LANCZOS)
-        except AttributeError:
-            # For older PIL versions
-            return img.resize((new_width, new_height), Image.LANCZOS)
-    
-    return img
+    # Resize the image
+    try:
+        return img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+    except AttributeError:
+        # For older PIL versions
+        return img.resize((new_width, new_height), Image.LANCZOS)
 
 def create_thumbnail(img_file, size=(200, 200)):
     """
@@ -365,3 +363,12 @@ def get_image_foreground_mask(img):
     except Exception as e:
         st.warning(f"Foreground extraction error: {str(e)}")
         return None
+
+def show_dependency_warnings():
+    """Show warnings for missing optional dependencies"""
+    if not CV2_AVAILABLE:
+        st.warning("OpenCV (cv2) not found. Some image processing features will be disabled.")
+    if not IMAGEHASH_AVAILABLE:
+        st.warning("imagehash library not found. Duplicate detection will be disabled.")
+    if not SKLEARN_AVAILABLE:
+        st.warning("scikit-learn not found. Color analysis features will be disabled.")

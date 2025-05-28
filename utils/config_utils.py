@@ -124,16 +124,35 @@ Step 4: Present the visualization to the user.
     # Initialize the agent with the loaded tools and system prompt
     try:
         # === MODEL SELECTION: Change the model name here if needed ===
-        llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.3)
-        # ============================================================
+        models_to_try = [
+            "gpt-3.5-turbo", 
+            "gpt-3.5-turbo-1106", 
+            "gpt-4o-mini",
+            "gpt-4.1-nano"
+        ]
+        
+        llm = None
+        for model in models_to_try:
+            try:
+                llm = ChatOpenAI(model=model, temperature=0.3)
+                # Test the model with a simple call
+                test_response = llm.predict("test")
+                st.success(f"✅ Successfully initialized with model: {model}")
+                break
+            except Exception as model_error:
+                st.warning(f"Model {model} failed: {str(model_error)}")
+                continue
+        
+        if llm is None:
+            raise Exception("No working models available")
+            
         agent = initialize_agent(
             tools, 
             llm, 
             agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
             verbose=True,
             memory=memory,
-            handle_parsing_errors=True,
-            system_message=system_prompt
+            handle_parsing_errors=True
         )
         
         st.session_state.agent = agent
@@ -141,5 +160,3 @@ Step 4: Present the visualization to the user.
     except Exception as e:
         st.error(f"Failed to initialize agent: {str(e)}")
         return None
-#openai_api_key = st.secrets["openai_api_key"]
-#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

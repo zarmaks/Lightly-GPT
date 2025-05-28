@@ -3,15 +3,23 @@
 import os
 import io
 import base64
-import torch
 import streamlit as st
 import chromadb
 from datetime import datetime
 from PIL import Image, ExifTags
 from dotenv import load_dotenv
+
+# Import torch with error handling to prevent Streamlit watcher issues
+try:
+    import torch
+    # Disable torch JIT to avoid Streamlit compatibility issues
+    torch.jit._state.disable()
+except:
+    pass
+
 from transformers import CLIPProcessor, CLIPModel
 from langchain.agents import Tool, AgentType, initialize_agent
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
 
 import warnings
@@ -26,6 +34,7 @@ if current_dir not in sys.path:
 # Import our custom modules
 from utils.clip_utils import ensure_clip_model_loaded, generate_clip_embedding_generic
 from utils.ui_utils import display_image_grid, show_agent_thinking, format_agent_response, create_image_card
+from utils.image_utils import show_dependency_warnings
 from tools.clip_tools import clip_image_search_tool
 from tools.analysis_tools import analyze_image_colors, detect_bw_images
 from tools.duplicate_tools import find_duplicate_images
@@ -34,6 +43,9 @@ from tools.viz_tools import create_tsne_visualization, create_image_clusters
 
 # Load environment variables
 load_dotenv()
+
+# Show dependency warnings early
+show_dependency_warnings()
 
 # Configure page
 st.set_page_config(
@@ -75,7 +87,19 @@ with col1:
 with col2:
     if st.button("Validate Key"):
         if api_key_input and api_key_input.startswith("sk-"):
-            st.success("✅ Valid API key format")
+            # Test the API key by making a simple request
+            try:
+                import openai
+                openai.api_key = api_key_input
+                # Test with a minimal request
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=[{"role": "user", "content": "test"}],
+                    max_tokens=1
+                )
+                st.success("✅ Valid and working API key")
+            except Exception as e:
+                st.error(f"❌ API key error: {str(e)}")
         else:
             st.error("❌ Invalid API key format")
 
@@ -205,6 +229,10 @@ if st.session_state.processed:
         with st.chat_message("assistant"):
             with st.spinner("Analyzing images..."):
                 try:
+                    # Check API key before making requests
+                    if not api_key_input or not api_key_input.startswith("sk-"):
+                        raise Exception("Invalid API key format")
+                    
                     # Store the agent's verbose output for visualization
                     with io.StringIO() as thinking_buffer:
                         # Create a temporary print function that writes to our buffer
@@ -231,14 +259,25 @@ if st.session_state.processed:
                     st.markdown(formatted_response)
                     # Add assistant response to chat history
                     st.session_state.messages.append({"role": "assistant", "content": response})
+                    
                 except Exception as e:
-                    st.error(f"An error occurred: {str(e)}")
-                    st.session_state.messages.append({"role": "assistant", "content": f"I encountered an error: {str(e)}"})
+                    error_msg = str(e)
+                    if "401" in error_msg or "not_authorized" in error_msg:
+                        st.error("🚨 **API Key Issue**")
+                        st.error("Your OpenAI API key is invalid, expired, or the project has been archived.")
+                        st.info("**Solutions:**")
+                        st.info("1. Get a new API key from https://platform.openai.com/api-keys")
+                        st.info("2. Check your OpenAI account billing status")
+                        st.info("3. Make sure your project is active (not archived)")
+                    else:
+                        st.error(f"An error occurred: {error_msg}")
+                    st.session_state.messages.append({"role": "assistant", "content": f"I encountered an error: {error_msg}"})
 
 # Add explanation in sidebar
 with st.sidebar:
     # Add company logo at the top of the sidebar
-    st.image(r"assets\Lightly_logo.png", width=200)
+    logo_path = os.path.join("assets", "Lightly_logo.png")
+    st.image(logo_path, width=200)
 
     st.subheader("LightlyGPT")
     st.markdown("""
