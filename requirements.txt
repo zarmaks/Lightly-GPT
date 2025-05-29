@@ -5,7 +5,7 @@ langchain>=0.0.267
 langchain-community>=0.0.10
 matplotlib>=3.7.1
 numpy>=1.23.5
-openai==0.28>=0.28.0
+openai==0.28.0 # Ensure compatibility with langchain
 pandas>=1.5.3
 Pillow>=9.5.0
 python-dotenv>=1.0.0
@@ -15,3 +15,4 @@ geopy==2.4.1
 torch>=2.0.0
 transformers>=4.30.0
 opencv-python>=4.5.0
+pytest

@@ -1,45 +1,37 @@
 # Main application file for Agent_4o - CLIP-based Image Analysis with LangChain Agent
 
 import os
+import sys
 import io
-import base64
+import warnings
 import streamlit as st
-import chromadb
-from datetime import datetime
-from PIL import Image, ExifTags
+from PIL import Image
 from dotenv import load_dotenv
+from utils.clip_utils import ensure_clip_model_loaded, generate_clip_embedding_generic
+from utils.ui_utils import (
+    display_image_grid,
+    show_agent_thinking,
+    format_agent_response,
+)
+from utils.image_utils import show_dependency_warnings
+from utils.session_utils import initialize_session_state, validate_session_files
+from utils.config_utils import initialize_agent_tools
 
 # Import torch with error handling to prevent Streamlit watcher issues
 try:
     import torch
+
     # Disable torch JIT to avoid Streamlit compatibility issues
     torch.jit._state.disable()
-except:
+except Exception:
     pass
 
-from transformers import CLIPProcessor, CLIPModel
-from langchain.agents import Tool, AgentType, initialize_agent
-from langchain_community.chat_models import ChatOpenAI
-from langchain.memory import ConversationBufferMemory
-
-import warnings
 warnings.filterwarnings("ignore", message=".*use_column_width.*")
 
 # Add the project root to Python path for more reliable imports
-import sys
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.append(current_dir)
-
-# Import our custom modules
-from utils.clip_utils import ensure_clip_model_loaded, generate_clip_embedding_generic
-from utils.ui_utils import display_image_grid, show_agent_thinking, format_agent_response, create_image_card
-from utils.image_utils import show_dependency_warnings
-from tools.clip_tools import clip_image_search_tool
-from tools.analysis_tools import analyze_image_colors, detect_bw_images
-from tools.duplicate_tools import find_duplicate_images
-from tools.exif_tools import filter_by_datetime, filter_by_location
-from tools.viz_tools import create_tsne_visualization, create_image_clusters
 
 # Load environment variables
 load_dotenv()
@@ -55,17 +47,11 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Import session state utilities
-from utils.session_utils import initialize_session_state, validate_session_files
-
 # Initialize all session state variables centrally
 initialize_session_state()
 
 # Validate files in session state
 validate_session_files()
-
-# Import our new configuration utility
-from utils.config_utils import initialize_agent_tools
 
 # Main title
 st.title("🔆 LightlyGPT - Agentic AI tool for Image Analysis")
@@ -81,7 +67,7 @@ with col1:
         "Enter your OpenAI API key:",
         value=api_key if api_key else "",
         type="password",
-        placeholder="sk-..."
+        placeholder="sk-...",
     )
 
 with col2:
@@ -90,12 +76,13 @@ with col2:
             # Test the API key by making a simple request
             try:
                 import openai
+
                 openai.api_key = api_key_input
                 # Test with a minimal request
                 response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
                     messages=[{"role": "user", "content": "test"}],
-                    max_tokens=1
+                    max_tokens=1,
                 )
                 st.success("✅ Valid and working API key")
             except Exception as e:
@@ -105,7 +92,9 @@ with col2:
 
 # Stop app execution if no API key is provided
 if not api_key_input:
-    st.info("👆 You need an OpenAI API key to use this app. Visit https://platform.openai.com/api-keys to get one.")
+    st.info(
+        "👆 You need an OpenAI API key to use this app. Visit https://platform.openai.com/api-keys to get one."
+    )
     st.stop()
 else:
     # Set API key in environment variables
@@ -116,7 +105,7 @@ st.subheader("📁 Upload Images")
 uploaded_files = st.file_uploader(
     "Upload your images (JPG, PNG, etc.)",
     type=["jpg", "jpeg", "png", "bmp", "webp"],
-    accept_multiple_files=True
+    accept_multiple_files=True,
 )
 
 # Store uploaded files in session state
@@ -124,27 +113,32 @@ if uploaded_files:
     # Add any new files to session state
     new_files = []
     existing_filenames = [f.name for f in st.session_state.uploaded_images]
-    
+
     for file in uploaded_files:
         if file.name not in existing_filenames:
             new_files.append(file)
-            
+
     # Add new files to existing ones
     st.session_state.uploaded_images.extend(new_files)
-    
+
     # Reset processed flag if new files are added
     if new_files:
         st.session_state.processed = False
 
 # Show active filtered set count
 if st.session_state.uploaded_images:
-    active_count = len(st.session_state.last_filtered_indices) if hasattr(st.session_state, "last_filtered_indices") and st.session_state.last_filtered_indices else len(st.session_state.uploaded_images)
-    st.info(f"Ενεργές εικόνες: {active_count} / {len(st.session_state.uploaded_images)}")
+    active_count = (
+        len(st.session_state.last_filtered_indices)
+        if hasattr(st.session_state, "last_filtered_indices")
+        and st.session_state.last_filtered_indices
+        else len(st.session_state.uploaded_images)
+    )
+    st.info(f"Active images: {active_count} / {len(st.session_state.uploaded_images)}")
 
 # Display uploaded images in a grid
 if st.session_state.uploaded_images:
     st.subheader(f"📊 Uploaded Images ({len(st.session_state.uploaded_images)})")
-    
+
     # Use our custom UI utility for displaying images in a grid
     display_image_grid(st.session_state.uploaded_images, num_columns=4)
 
@@ -158,48 +152,57 @@ if st.session_state.uploaded_images:
                     collection_name = "clip_images"
                     try:
                         # Always delete the collection to ensure correct metric
-                        st.session_state.chroma_client.delete_collection(collection_name)
+                        st.session_state.chroma_client.delete_collection(
+                            collection_name
+                        )
                     except Exception:
                         pass  # Collection may not exist yet
-                    st.session_state.collection = st.session_state.chroma_client.create_collection(
-                        name=collection_name,
-                        embedding_function=None,  # We'll provide our own embeddings
-                        metadata={"hnsw:space": "cosine"}  # Use cosine distance for CLIP
+                    st.session_state.collection = (
+                        st.session_state.chroma_client.create_collection(
+                            name=collection_name,
+                            embedding_function=None,  # We'll provide our own embeddings
+                            metadata={
+                                "hnsw:space": "cosine"
+                            },  # Use cosine distance for CLIP
+                        )
                     )
-                    
+
                     # Process each image
                     for i, img_file in enumerate(st.session_state.uploaded_images):
                         try:
                             # Generate CLIP embedding
-                            embedding = generate_clip_embedding_generic(img_file, is_image=True)
-                            
+                            embedding = generate_clip_embedding_generic(
+                                img_file, is_image=True
+                            )
+
                             # Extract image metadata
                             img_file.seek(0)
                             img = Image.open(img_file)
-                            
+
                             # Store in ChromaDB
                             st.session_state.collection.add(
                                 ids=[f"img_{i}"],
                                 embeddings=[embedding.tolist()],
-                                metadatas=[{
-                                    "filename": img_file.name,
-                                    "index": i,
-                                    "source": "current_session"
-                                }]
+                                metadatas=[
+                                    {
+                                        "filename": img_file.name,
+                                        "index": i,
+                                        "source": "current_session",
+                                    }
+                                ],
                             )
-                            
+
                             # Update progress
                             st.progress((i + 1) / len(st.session_state.uploaded_images))
-                        
+
                         except Exception as e:
                             st.error(f"Error processing {img_file.name}: {str(e)}")
-                    
                     st.session_state.processed = True
                     st.success("✅ All images processed and indexed!")
-                    
+
                     # Initialize the agent after processing
                     initialize_agent_tools()
-                    
+
                     # Rerun to update the UI
                     st.rerun()
 
@@ -210,21 +213,21 @@ if st.session_state.processed and st.session_state.agent is None:
 # Chat interface - only show if images have been processed
 if st.session_state.processed:
     st.subheader("💬 Chat with Your Images")
-    
+
     # Display chat history
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
-    
+
     # Chat input
     if prompt := st.chat_input("Ask anything about your images..."):
         # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
-        
+
         # Display user message in chat message container
         with st.chat_message("user"):
             st.markdown(prompt)
-        
+
         # Generate response
         with st.chat_message("assistant"):
             with st.spinner("Analyzing images..."):
@@ -232,19 +235,22 @@ if st.session_state.processed:
                     # Check API key before making requests
                     if not api_key_input or not api_key_input.startswith("sk-"):
                         raise Exception("Invalid API key format")
-                    
+
                     # Store the agent's verbose output for visualization
                     with io.StringIO() as thinking_buffer:
                         # Create a temporary print function that writes to our buffer
                         original_print = print
+
                         def verbose_print(*args, **kwargs):
                             try:
                                 thinking_buffer.write(" ".join(map(str, args)) + "\n")
                             except ValueError:
                                 pass  # Ignore if buffer is closed
                             original_print(*args, **kwargs)
+
                         # Replace print temporarily to capture thinking
                         import builtins
+
                         builtins.print = verbose_print
                         # Run the agent
                         response = st.session_state.agent.run(prompt)
@@ -256,22 +262,34 @@ if st.session_state.processed:
                     show_agent_thinking(thinking_text)
                     # Show formatted response
                     formatted_response = format_agent_response(response)
-                    st.markdown(formatted_response)
-                    # Add assistant response to chat history
-                    st.session_state.messages.append({"role": "assistant", "content": response})
-                    
+                    st.markdown(
+                        formatted_response
+                    )  # Add assistant response to chat history
+                    st.session_state.messages.append(
+                        {"role": "assistant", "content": response}
+                    )
+
                 except Exception as e:
                     error_msg = str(e)
                     if "401" in error_msg or "not_authorized" in error_msg:
                         st.error("🚨 **API Key Issue**")
-                        st.error("Your OpenAI API key is invalid, expired, or the project has been archived.")
+                        st.error(
+                            "Your OpenAI API key is invalid, expired, or the project has been archived."
+                        )
                         st.info("**Solutions:**")
-                        st.info("1. Get a new API key from https://platform.openai.com/api-keys")
+                        st.info(
+                            "1. Get a new API key from https://platform.openai.com/api-keys"
+                        )
                         st.info("2. Check your OpenAI account billing status")
                         st.info("3. Make sure your project is active (not archived)")
                     else:
                         st.error(f"An error occurred: {error_msg}")
-                    st.session_state.messages.append({"role": "assistant", "content": f"I encountered an error: {error_msg}"})
+                    st.session_state.messages.append(
+                        {
+                            "role": "assistant",
+                            "content": f"I encountered an error: {error_msg}",
+                        }
+                    )
 
 # Add explanation in sidebar
 with st.sidebar:
@@ -308,8 +326,19 @@ with st.sidebar:
     - "Show me a visualization of my image collection"
     - "Group similar images into 3 clusters"
     """)
-    
+
     # Add reset filters button in sidebar
-    if st.button("🔄 Επαναφορά φίλτρων (Reset filters)"):
-        st.session_state.last_filtered_indices = list(range(len(st.session_state.uploaded_images)))
-        st.success("Τα φίλτρα επανήλθαν. Όλες οι εικόνες είναι ενεργές.")
+    if st.button("🔄 Reset filters"):
+        st.session_state.last_filtered_indices = list(
+            range(len(st.session_state.uploaded_images))
+        )
+        st.success("Filters reset. All images are now active.")
+
+def main():
+    """Main entry point for the LightlyGPT application."""
+    # The main app logic is already in the global scope above
+    pass
+
+
+if __name__ == "__main__":
+    main()

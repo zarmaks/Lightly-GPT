@@ -2,6 +2,8 @@
 
 LightlyGPT is an AI-powered image analysis tool that combines advanced vision and language models to help you explore, search, and analyze your image collections interactively.
 
+*This project was developed in collaboration with [Lightly.ai](https://lightly.ai) as a capstone project for the Data Science Bootcamp at Big Blue Data Academy.*
+
 ## Features
 
 - **CLIP Model**: Understands image content for semantic search and analysis
@@ -21,23 +23,49 @@ LightlyGPT is an AI-powered image analysis tool that combines advanced vision an
 
 ## Installation
 
-1. Clone this repository:
-   ```sh
-   git clone https://github.com/your-username/your-repo.git
-   cd LightlyGPT_v2
+### Prerequisites
+- Python 3.8 or higher
+- OpenAI API key
+
+### Quick Install
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/your-username/LightlyGPT.git
+   cd LightlyGPT
    ```
-2. (Recommended) Create and activate a virtual environment:
-   ```sh
+
+2. **Create and activate a virtual environment:**
+   ```bash
    python -m venv venv
-   # On Windows:
+   
+   # Windows
    venv\Scripts\activate
-   # On Linux/Mac:
+   
+   # macOS/Linux
    source venv/bin/activate
    ```
-3. Install dependencies:
-   ```sh
-   pip install -r requirements.txt
+
+3. **Install the package:**
+   ```bash
+   # Install in development mode
+   pip install -e .
+   
+   # Or install from PyPI (when published)
+   pip install lightlygpt
    ```
+
+### Development Installation
+
+For contributing to the project:
+
+```bash
+# Install with development dependencies
+pip install -e ".[dev]"
+
+# Or install individual dev tools
+pip install -e ".[test]"  # Just testing tools
+```
 
 ## Usage
 
@@ -60,6 +88,13 @@ LightlyGPT is an AI-powered image analysis tool that combines advanced vision an
 - "Show me a visualization of my image collection"
 - "Group similar images into 3 clusters"
 
-## License
+## About
 
-[Add your license here]
+This project was developed as a capstone project for the Data Science Bootcamp at Big Blue Data Academy over a 7-week period, in collaboration with [Lightly.ai](https://lightly.ai). The development process included weekly mentorship sessions with Lionel Peer, who provided valuable guidance and advice throughout the project.
+
+## Acknowledgments
+
+- **Lightly.ai** - For their collaboration and support in making this project possible
+- **Big Blue Data Academy** - For providing the Data Science Bootcamp framework
+- **Lionel Peer** - For mentorship and weekly guidance sessions during development
+

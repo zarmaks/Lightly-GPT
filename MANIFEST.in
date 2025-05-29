@@ -1,0 +1,13 @@
+include README.md
+include LICENSE
+include pyproject.toml
+include .gitignore
+recursive-include assets *.png *.jpg *.jpeg *.svg *.ico
+recursive-include utils *.py
+recursive-include tools *.py
+recursive-include tests *.py
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude * *.so
+recursive-exclude * .DS_Store
+recursive-exclude * Thumbs.db

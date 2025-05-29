@@ -85,3 +85,62 @@ agent4o_clip_data/
 
 # Streamlit
 .streamlit/
+
+# Poetry
+poetry.lock
+
+# pip-tools
+requirements-dev.txt
+
+# Distribution / packaging (additional)
+*.whl
+.Python
+wheels/
+
+# IDEs
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files (additional)
+*.tmp
+*.bak
+
+# Model files and caches
+*.pt
+*.pth
+*.bin
+*.safetensors
+model_cache/
+.cache/
+.transformers_cache/
+
+# API Keys and secrets
+.secrets/
+*.key
+api_keys.txt
+
+# Logs
+*.log
+logs/
+.logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Chrome/ChromaDB specific
+chroma.sqlite3
+chroma_db/
+
+# User uploads and generated content
+uploads/
+generated/
+output/
