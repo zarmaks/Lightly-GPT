@@ -1,8 +1,8 @@
 # CLIP-based image analysis tools package
 # These tools provide various image analysis functions for use with LangChain agents
 
-from utils import setup_project_path
-from utils.path_utils import check_dependency
+from ..utils import setup_project_path
+from ..utils.path_utils import check_dependency
 
 # Ensure the project root is in the Python path
 setup_project_path()

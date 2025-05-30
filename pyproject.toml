@@ -71,11 +71,11 @@ Documentation = "https://github.com/your-username/LightlyGPT#readme"
 "Bug Tracker" = "https://github.com/your-username/LightlyGPT/issues"
 
 [project.scripts]
-lightlygpt = "app:main"
+lightlygpt = "lightlygpt.app:main"
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["utils*", "tools*"]
+where = ["src"]
+include = ["lightlygpt*"]
 exclude = ["tests*"]
 
 [tool.black]
@@ -100,7 +100,7 @@ extend-exclude = '''
 profile = "black"
 multi_line_output = 3
 line_length = 88
-known_first_party = ["utils", "tools"]
+known_first_party = ["lightlygpt"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -110,8 +110,7 @@ python_functions = ["test_*"]
 addopts = [
     "--strict-markers",
     "--strict-config",
-    "--cov=utils",
-    "--cov=tools",
+    "--cov=src/lightlygpt",
     "--cov-report=term-missing:skip-covered",
     "--cov-report=html:htmlcov",
     "--cov-fail-under=80",
@@ -150,7 +149,7 @@ module = [
 ignore_missing_imports = true
 
 [tool.coverage.run]
-source = ["utils", "tools"]
+source = ["src/lightlygpt"]
 omit = [
     "*/tests/*",
     "*/__pycache__/*",

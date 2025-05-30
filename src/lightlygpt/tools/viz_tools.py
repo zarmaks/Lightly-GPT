@@ -7,8 +7,8 @@ import os
 import warnings
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.ui_utils import plot_image_clusters
-from utils.session_utils import get_active_indices
+from ..utils.ui_utils import plot_image_clusters
+from ..utils.session_utils import get_active_indices
 
 warnings.filterwarnings("ignore", message=".*use_column_width.*")
 

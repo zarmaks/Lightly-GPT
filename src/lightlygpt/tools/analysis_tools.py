@@ -5,10 +5,10 @@ import streamlit as st
 from PIL import Image, ImageStat
 
 # Import from our utils package
-from utils import setup_project_path, requires_session_setup
-from utils.error_utils import handle_tool_errors
-from utils.path_utils import check_dependency
-from utils.session_utils import get_active_indices
+from ..utils import setup_project_path, requires_session_setup
+from ..utils.error_utils import handle_tool_errors
+from ..utils.path_utils import check_dependency
+from ..utils.session_utils import get_active_indices
 
 # Ensure path is set up correctly
 setup_project_path()
@@ -125,7 +125,7 @@ def detect_bw_images(image_indices_str="use last filtered set"):
     Returns:
         String listing black & white images
     """
-    from utils.image_utils import is_grayscale
+    from ..utils.image_utils import is_grayscale
     
     # Support 'use last filtered set' or explicit indices
     if isinstance(image_indices_str, str) and image_indices_str.strip().lower() in [

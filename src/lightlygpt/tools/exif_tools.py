@@ -5,7 +5,7 @@ import sys
 import os
 from datetime import datetime
 from PIL import Image, ExifTags
-from utils.session_utils import get_active_indices
+from ..utils.session_utils import get_active_indices
 
 import warnings
 

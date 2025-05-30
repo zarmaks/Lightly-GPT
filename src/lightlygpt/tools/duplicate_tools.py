@@ -7,7 +7,7 @@ from PIL import Image
 import warnings
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.image_utils import compute_image_hash, resize_image
+from ..utils.image_utils import compute_image_hash, resize_image
 
 warnings.filterwarnings("ignore", message=".*use_column_width.*")
 
@@ -23,9 +23,15 @@ def find_duplicate_images(threshold_str="5"):
         String describing duplicate images found
     """
     try:
-        # Parse threshold (1-10 scale, convert to actual hash difference threshold)
+        # Check if we have uploaded images
+        if not hasattr(st.session_state, 'uploaded_images') or not st.session_state.uploaded_images:
+            st.warning("No images have been uploaded yet. Please upload images first.")
+            return "No images have been uploaded yet. Please upload images first to find duplicates."
+          # Parse threshold (1-10 scale, convert to actual hash difference threshold)
         threshold = max(1, min(10, int(threshold_str)))
         hash_threshold = 16 - threshold  # Convert to hash difference (0-16 scale)
+        
+        st.info(f"Processing {len(st.session_state.uploaded_images)} images for duplicate detection...")
 
         # Calculate image hashes
         hashes = []

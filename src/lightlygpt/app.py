@@ -7,15 +7,15 @@ import warnings
 import streamlit as st
 from PIL import Image
 from dotenv import load_dotenv
-from utils.clip_utils import ensure_clip_model_loaded, generate_clip_embedding_generic
-from utils.ui_utils import (
+from lightlygpt.utils.clip_utils import ensure_clip_model_loaded, generate_clip_embedding_generic
+from lightlygpt.utils.ui_utils import (
     display_image_grid,
     show_agent_thinking,
     format_agent_response,
 )
-from utils.image_utils import show_dependency_warnings
-from utils.session_utils import initialize_session_state, validate_session_files
-from utils.config_utils import initialize_agent_tools
+from lightlygpt.utils.image_utils import show_dependency_warnings
+from lightlygpt.utils.session_utils import initialize_session_state, validate_session_files
+from lightlygpt.utils.config_utils import initialize_agent_tools
 
 # Import torch with error handling to prevent Streamlit watcher issues
 try:
@@ -295,18 +295,120 @@ if st.session_state.processed:
 with st.sidebar:
     # Add company logo at the top of the sidebar
     logo_path = os.path.join("assets", "Lightly_logo.png")
-    st.image(logo_path, width=200)
+    if os.path.exists(logo_path):
+        st.image(logo_path, width=200)
 
     st.subheader("LightlyGPT")
     st.markdown("""
     **LightlyGPT** is an AI-powered image analysis tool that combines:
     
     1. **CLIP Model**: For understanding image content
-    2. **gpt-4.1-nano**: For intelligent reasoning about images
+    2. **gpt-4o-mini**: For intelligent reasoning about images
     3. **LangChain**: For managing complex workflows
     4. **ChromaDB**: For efficient image storage and retrieval  
     5. **Agent Architecture**: To choose the right tool for each task
+    """)
+
+    # Add search settings section only if images are processed
+    if st.session_state.processed:
+        st.markdown("---")
+        st.subheader("🔍 Search Settings")
+        
+        # Enhanced contrast toggle
+        use_enhanced_contrast = st.checkbox(
+            "🔥 Enhanced Contrast Mode",
+            value=True,
+            help="Uses temperature scaling to dramatically improve result quality"
+        )
+        
+        if use_enhanced_contrast:
+            temperature = st.select_slider(
+                "Contrast Level:",
+                options=[0.05, 0.1, 0.15, 0.2, 0.3],
+                value=0.15,
+                format_func=lambda x: {
+                    0.05: "Maximum Contrast",
+                    0.1: "High Contrast", 
+                    0.15: "Balanced Contrast",
+                    0.2: "Moderate Contrast",
+                    0.3: "Low Contrast"
+                }[x],
+                help="Lower values = more dramatic contrast between relevant/irrelevant images"
+            )
+        else:
+            temperature = 1.0  # No scaling
+        
+        # Threshold mode selection
+        threshold_mode = st.radio(
+            "Search Mode:",
+            ["Dynamic (Recommended)", "Static"],
+            help="Dynamic automatically adjusts based on results quality"
+        )
+        
+        if threshold_mode == "Dynamic (Recommended)":
+            # Dynamic mode with user-friendly options
+            search_sensitivity = st.select_slider(
+                "Search Sensitivity:",
+                options=["Very Strict", "Strict", "Balanced", "Relaxed", "Very Relaxed"],
+                value="Balanced",
+                help="Controls how many results you get"
+            )
+            
+            # Map user choices to technical parameters  
+            sensitivity_mapping = {
+                "Very Strict": {"percentile": 40, "max_threshold": 0.6},
+                "Strict": {"percentile": 50, "max_threshold": 0.7},
+                "Balanced": {"percentile": 60, "max_threshold": 0.8},
+                "Relaxed": {"percentile": 70, "max_threshold": 0.85},
+                "Very Relaxed": {"percentile": 80, "max_threshold": 0.9}
+            }
+            
+            params = sensitivity_mapping[search_sensitivity]
+            
+            st.session_state.search_settings = {
+                'use_dynamic': True,
+                'percentile': params["percentile"],
+                'threshold': params["max_threshold"],
+                'mode': 'dynamic',
+                'sensitivity': search_sensitivity,
+                'use_temperature_scaling': use_enhanced_contrast,
+                'temperature': temperature
+            }
+            
+            # Show what this means
+            expected_results = 100 - params['percentile']
+            st.caption(f"💡 **{search_sensitivity}**: Expects ~{expected_results}% of best matching images")
+            
+            if use_enhanced_contrast:
+                st.caption(f"🔥 **Enhanced contrast**: Temperature {temperature} for better separation")
+            
+        else:
+            # Static mode with threshold slider
+            static_threshold = st.slider(
+                "Similarity Threshold:",
+                0.3, 0.95, 0.8, 0.05,
+                help="Lower = more strict (fewer results), Higher = more relaxed (more results)"
+            )
+            
+            st.session_state.search_settings = {
+                'use_dynamic': False,
+                'threshold': static_threshold,
+                'percentile': 70,
+                'mode': 'static',
+                'use_temperature_scaling': use_enhanced_contrast,
+                'temperature': temperature
+            }
+            
+            # Show similarity percentage
+            similarity_pct = (1 - static_threshold) * 100
+            st.caption(f"💡 **Minimum similarity**: {similarity_pct:.0f}%")
+            
+            if use_enhanced_contrast:
+                st.caption(f"🔥 **Enhanced contrast**: Temperature {temperature} for better separation")
+
+        st.markdown("---")
     
+    st.markdown("""
     ### Available Capabilities:
     
     - **Find images** matching natural language descriptions
@@ -320,19 +422,29 @@ with st.sidebar:
     ### Try asking:
     
     - "Find images with people smiling"
+    - "Search for cats"
+    - "Find dogs"
+    - "Look for cars"
+    - "Search for flowers"
     - "What are the dominant colors in my collection?"
-    - "Are there any black and white photos?"
-    - "Find duplicate images with threshold 5"
     - "Show me a visualization of my image collection"
-    - "Group similar images into 3 clusters"
     """)
 
     # Add reset filters button in sidebar
-    if st.button("🔄 Reset filters"):
+    if st.session_state.uploaded_images and st.button("🔄 Reset filters"):
         st.session_state.last_filtered_indices = list(
             range(len(st.session_state.uploaded_images))
         )
         st.success("Filters reset. All images are now active.")
+
+    # In the sidebar, add a debug toggle
+    if st.session_state.processed:
+        st.markdown("---")
+        debug_mode = st.checkbox("🔧 Debug Mode", help="Show agent decision-making process")
+        if debug_mode:
+            st.session_state.debug_mode = True
+        else:
+            st.session_state.debug_mode = False
 
 def main():
     """Main entry point for the LightlyGPT application."""
