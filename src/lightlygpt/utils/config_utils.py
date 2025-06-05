@@ -1,11 +1,12 @@
 # Configuration utilities for LightlyGPT
 
-from langchain.agents import Tool
-from langchain.agents import AgentType, initialize_agent
-from langchain_community.chat_models import ChatOpenAI
-from langchain.memory import ConversationBufferMemory
-import streamlit as st
 import importlib
+
+import streamlit as st
+from langchain.agents import AgentType, Tool, initialize_agent
+from langchain.memory import ConversationBufferMemory
+from langchain_community.chat_models import ChatOpenAI
+
 from ..tools.clip_tools import clip_image_search_tool
 
 # Tool configuration - makes it easier to add/remove tools
@@ -71,16 +72,16 @@ def enhanced_clip_search_wrapper(query):
         percentile = settings.get('percentile', 70)
         use_temperature_scaling = settings.get('use_temperature_scaling', True)
         temperature = settings.get('temperature', 0.15)
-        
+
         # Show user what settings are being used
         if settings.get('mode') == 'dynamic':
             mode_info = f"**{settings.get('sensitivity', 'Balanced')}** search sensitivity"
         else:
             mode_info = f"**static threshold**: {threshold:.2f}"
-            
+
         contrast_info = f" with {'**Enhanced Contrast**' if use_temperature_scaling else 'standard contrast'}"
         st.info(f"🔍 Using {mode_info}{contrast_info}")
-            
+
     else:
         # Fallback defaults
         threshold = 0.8
@@ -89,7 +90,7 @@ def enhanced_clip_search_wrapper(query):
         use_temperature_scaling = True
         temperature = 0.15
         st.info("🔍 Using **default** search settings with **Enhanced Contrast**")
-    
+
     return clip_image_search_tool(query, threshold, use_dynamic, percentile, use_temperature_scaling, temperature)
 
 
@@ -98,7 +99,7 @@ def initialize_agent_tools():
     Initialize LangChain agent with tools for image analysis using the configuration
     """
     tools = []
-    
+
     # Create tools from configuration
     for tool_key, config in TOOLS_CONFIG.items():
         if tool_key == "image_search":
@@ -133,7 +134,7 @@ def initialize_agent_tools():
     try:
         models_to_try = [
             "gpt-3.5-turbo",
-            "gpt-3.5-turbo-1106", 
+            "gpt-3.5-turbo-1106",
             "gpt-4o-mini",
             "gpt-4.1-nano",
         ]
@@ -153,7 +154,7 @@ def initialize_agent_tools():
 
         # Create agent with enhanced system message
         system_message = get_agent_prompt()
-        
+
         agent = initialize_agent(
             tools,
             llm,
@@ -165,7 +166,7 @@ def initialize_agent_tools():
                 "system_message": system_message
             }
         )
-        
+
         st.session_state.agent = agent
         return agent
     except Exception as e:

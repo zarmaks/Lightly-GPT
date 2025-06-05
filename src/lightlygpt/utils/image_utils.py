@@ -1,12 +1,12 @@
 # Image processing utilities for Agent_4o
 
-import io
 import base64
+import io
+import warnings
+
 import numpy as np
 import streamlit as st
 from PIL import Image
-
-import warnings
 
 warnings.filterwarnings("ignore", message=".*use_column_width.*")
 

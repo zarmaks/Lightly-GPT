@@ -1,8 +1,8 @@
 # Path utilities for managing import paths and dependency checks
 
+import importlib
 import os
 import sys
-import importlib
 
 # Dictionary to track dependency availability
 DEPENDENCIES = {

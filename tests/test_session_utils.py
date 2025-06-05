@@ -1,5 +1,6 @@
 import types
-import utils.session_utils as session_utils
+
+import lightlygpt.utils.session_utils as session_utils
 
 
 def test_initialize_session_state(monkeypatch):

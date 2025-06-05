@@ -1,7 +1,8 @@
 # Error handling utilities for the LightlyGPT application
 
-import traceback
 import functools
+import traceback
+
 import streamlit as st
 
 

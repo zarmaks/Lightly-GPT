@@ -1,12 +1,13 @@
 # UI helper functions for Agent_4o
 
-import streamlit as st
-import numpy as np
-import matplotlib.pyplot as plt
-from PIL import Image
-from .image_utils import image_to_base64
-
 import warnings
+
+import matplotlib.pyplot as plt
+import numpy as np
+import streamlit as st
+from PIL import Image
+
+from .image_utils import image_to_base64
 
 warnings.filterwarnings("ignore", message=".*use_column_width.*")
 
@@ -92,10 +93,9 @@ def create_thumbnail_gallery(images, on_click_func=None, size=(150, 150)):
                     if st.button("📷", key=f"thumb_{i}"):
                         on_click_func(i)
 
-                st.markdown(
-                    f"""
+                st.markdown(                    f"""
                     <div style="text-align: center">
-                        <img src="data:image/jpeg;base64,{img_str}" 
+                        <img src="data:image/jpeg;base64,{img_str}"
                              style="max-height: {size[1]}px; max-width: {size[0]}px; margin: 5px; border-radius: 5px;">
                         <p style="font-size: 0.8em; margin-top: 0;">{i}</p>
                     </div>
@@ -119,9 +119,8 @@ def styled_container(
     container = st.container()
 
     with container:
-        st.markdown(
-            f"""
-            <div style="border: 1px solid {border_color}; padding: {padding}; 
+        st.markdown(            f"""
+            <div style="border: 1px solid {border_color}; padding: {padding};
                       border-radius: {border_radius}; margin-bottom: 1em;">
             </div>
             """,
@@ -202,16 +201,14 @@ def display_color_palette(colors, labels=None):
         if isinstance(color, tuple) and len(color) == 3:
             hex_colors.append(f"#{color[0]:02x}{color[1]:02x}{color[2]:02x}")
         else:
-            hex_colors.append(color)
-
-    # Create HTML for color palette
+            hex_colors.append(color)    # Create HTML for color palette
     html = '<div style="display: flex; flex-wrap: wrap;">'
 
     for i, color in enumerate(hex_colors):
         label = labels[i] if labels and i < len(labels) else color
         html += f"""
         <div style="margin: 10px; text-align: center;">
-            <div style="width: 80px; height: 80px; background-color: {color}; 
+            <div style="width: 80px; height: 80px; background-color: {color};
                        border-radius: 5px; border: 1px solid #ddd;"></div>
             <p style="margin-top: 5px; font-size: 0.8em;">{label}</p>
         </div>
@@ -391,7 +388,7 @@ def create_empty_file_placeholder():
     """
     st.markdown(
         """
-        <div style="border: 2px dashed #ccc; border-radius: 10px; padding: 2em; 
+        <div style="border: 2px dashed #ccc; border-radius: 10px; padding: 2em;
                   text-align: center; margin-bottom: 1em;">
             <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>

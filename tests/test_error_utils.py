@@ -1,4 +1,4 @@
-import utils.error_utils as error_utils
+import lightlygpt.utils.error_utils as error_utils
 
 
 def test_handle_tool_errors_decorator():

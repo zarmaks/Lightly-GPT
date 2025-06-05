@@ -1,15 +1,17 @@
 # Tools for finding duplicate images
 
-import streamlit as st
-import sys
-import os
-from PIL import Image
 import warnings
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import streamlit as st
+from PIL import Image
+
+from ..utils import setup_project_path
 from ..utils.image_utils import compute_image_hash, resize_image
 
 warnings.filterwarnings("ignore", message=".*use_column_width.*")
+
+# Ensure project path is set up
+setup_project_path()
 
 
 def find_duplicate_images(threshold_str="5"):
@@ -30,7 +32,7 @@ def find_duplicate_images(threshold_str="5"):
           # Parse threshold (1-10 scale, convert to actual hash difference threshold)
         threshold = max(1, min(10, int(threshold_str)))
         hash_threshold = 16 - threshold  # Convert to hash difference (0-16 scale)
-        
+
         st.info(f"Processing {len(st.session_state.uploaded_images)} images for duplicate detection...")
 
         # Calculate image hashes

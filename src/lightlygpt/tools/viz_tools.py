@@ -1,16 +1,18 @@
 # Tools for visualizing image relationships
 
-import numpy as np
-import streamlit as st
-import sys
-import os
 import warnings
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from ..utils.ui_utils import plot_image_clusters
+import numpy as np
+import streamlit as st
+
+from ..utils import setup_project_path
 from ..utils.session_utils import get_active_indices
+from ..utils.ui_utils import plot_image_clusters
 
 warnings.filterwarnings("ignore", message=".*use_column_width.*")
+
+# Ensure project path is set up
+setup_project_path()
 
 # Try to import visualization dependencies with error handling
 try:
@@ -21,8 +23,8 @@ except ImportError:
     MATPLOTLIB_AVAILABLE = False
 
 try:
-    from sklearn.manifold import TSNE
     from sklearn.cluster import KMeans
+    from sklearn.manifold import TSNE
 
     SKLEARN_AVAILABLE = True
 except ImportError:

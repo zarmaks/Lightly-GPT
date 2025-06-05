@@ -28,11 +28,6 @@ except Exception:
 
 warnings.filterwarnings("ignore", message=".*use_column_width.*")
 
-# Add the project root to Python path for more reliable imports
-current_dir = os.path.dirname(os.path.abspath(__file__))
-if current_dir not in sys.path:
-    sys.path.append(current_dir)
-
 # Load environment variables
 load_dotenv()
 
@@ -301,11 +296,11 @@ with st.sidebar:
     st.subheader("LightlyGPT")
     st.markdown("""
     **LightlyGPT** is an AI-powered image analysis tool that combines:
-    
+
     1. **CLIP Model**: For understanding image content
     2. **gpt-4o-mini**: For intelligent reasoning about images
     3. **LangChain**: For managing complex workflows
-    4. **ChromaDB**: For efficient image storage and retrieval  
+    4. **ChromaDB**: For efficient image storage and retrieval
     5. **Agent Architecture**: To choose the right tool for each task
     """)
 
@@ -313,7 +308,7 @@ with st.sidebar:
     if st.session_state.processed:
         st.markdown("---")
         st.subheader("🔍 Search Settings")
-        
+
         # Enhanced contrast toggle
         use_enhanced_contrast = st.checkbox(
             "🔥 Enhanced Contrast Mode",
@@ -405,12 +400,11 @@ with st.sidebar:
             
             if use_enhanced_contrast:
                 st.caption(f"🔥 **Enhanced contrast**: Temperature {temperature} for better separation")
-
+        
         st.markdown("---")
-    
-    st.markdown("""
+        st.markdown("""
     ### Available Capabilities:
-    
+
     - **Find images** matching natural language descriptions
     - **Analyze colors** in your images
     - **Detect black & white** images automatically
@@ -418,9 +412,9 @@ with st.sidebar:
     - **Filter by date & location** using image metadata
     - **Visualize relationships** between images using t-SNE
     - **Group similar images** into meaningful clusters
-    
+
     ### Try asking:
-    
+
     - "Find images with people smiling"
     - "Search for cats"
     - "Find dogs"

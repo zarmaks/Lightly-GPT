@@ -2,10 +2,11 @@
 
 import numpy as np
 import streamlit as st
-from PIL import Image, ImageStat
+from PIL import Image
 
 # Import from our utils package
-from ..utils import setup_project_path, requires_session_setup
+from ..utils import requires_session_setup, setup_project_path
+from ..utils.clip_utils import rgb_to_hex
 from ..utils.error_utils import handle_tool_errors
 from ..utils.path_utils import check_dependency
 from ..utils.session_utils import get_active_indices
@@ -19,11 +20,6 @@ if not SKLEARN_AVAILABLE:
     st.warning("scikit-learn not found. Color analysis will be limited.")
 else:
     from sklearn.cluster import KMeans
-
-
-def rgb_to_hex(rgb):
-    """Convert RGB color to hex string"""
-    return "#{:02x}{:02x}{:02x}".format(int(rgb[0]), int(rgb[1]), int(rgb[2]))
 
 
 @handle_tool_errors
@@ -126,7 +122,7 @@ def detect_bw_images(image_indices_str="use last filtered set"):
         String listing black & white images
     """
     from ..utils.image_utils import is_grayscale
-    
+
     # Support 'use last filtered set' or explicit indices
     if isinstance(image_indices_str, str) and image_indices_str.strip().lower() in [
         "use last filtered set",
@@ -151,7 +147,7 @@ def detect_bw_images(image_indices_str="use last filtered set"):
     for idx in indices:
         if 0 <= idx < len(st.session_state.uploaded_images):
             img_file = st.session_state.uploaded_images[idx]
-            
+
             # Use the more robust is_grayscale function from image_utils
             if is_grayscale(img_file, threshold=15):  # Slightly higher threshold for fewer false positives
                 bw_images.append(

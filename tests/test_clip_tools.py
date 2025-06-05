@@ -1,7 +1,8 @@
-import pytest
 import types
 
-import tools.clip_tools as clip_tools
+import pytest
+
+import lightlygpt.tools.clip_tools as clip_tools
 
 
 class DummyCollection:
@@ -50,7 +51,7 @@ def test_clip_image_search_tool_basic(patch_streamlit):
 
 
 def test_clip_image_search_tool_no_processed(monkeypatch):
-    import tools.clip_tools as clip_tools
+    import lightlygpt.tools.clip_tools as clip_tools
 
     dummy_st = types.SimpleNamespace()
     dummy_st.session_state = types.SimpleNamespace()
@@ -61,7 +62,7 @@ def test_clip_image_search_tool_no_processed(monkeypatch):
 
 
 def test_clip_image_search_tool_no_collection(monkeypatch):
-    import tools.clip_tools as clip_tools
+    import lightlygpt.tools.clip_tools as clip_tools
 
     dummy_st = types.SimpleNamespace()
     dummy_st.session_state = types.SimpleNamespace()
@@ -73,7 +74,7 @@ def test_clip_image_search_tool_no_collection(monkeypatch):
 
 
 def test_clip_image_search_tool_no_images(monkeypatch):
-    import tools.clip_tools as clip_tools
+    import lightlygpt.tools.clip_tools as clip_tools
 
     dummy_st = types.SimpleNamespace()
     dummy_st.session_state = types.SimpleNamespace()

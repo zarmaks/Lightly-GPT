@@ -1,172 +1,66 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "lightlygpt"
 version = "1.0.0"
-description = "AI-powered image analysis tool combining CLIP, GPT, and LangChain for intelligent image exploration. Developed in collaboration with Lightly.ai as a capstone project for Big Blue Data Academy's Data Science Bootcamp."
+description = "AI-powered image analysis tool built in collaboration with Lightly.ai"
 readme = "README.md"
-license = {text = "MIT"}
-authors = [
-    {name = "Konstantinos Zarmakoupis", email = "zarmaks@gmail.com"}
-]
-maintainers = [
-    {name = "Konstantinos Zarmakoupis", email = "zarmaks@gmail.com"}
-]
-keywords = ["ai", "image-analysis", "clip", "gpt", "streamlit", "computer-vision", "langchain"]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Science/Research",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-    "Topic :: Multimedia :: Graphics",
-]
 requires-python = ">=3.8"
+authors = [
+    {name = "Your Name", email = "your.email@example.com"},
+]
+
 dependencies = [
+    "streamlit>=1.25.0",
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    # "clip-by-openai>=1.0",  
+    "transformers>=4.30.0",
+    "Pillow>=9.5.0",
+    "numpy>=1.23.5",
+    "pandas>=1.5.3",
+    "scikit_learn>=1.2.2",
+    "matplotlib>=3.7.1",
+    "seaborn>=0.12.0",
+    "plotly>=5.15.0",
     "chromadb>=0.4.18",
-    "imageHash>=4.3.1",
+    "openai==0.28.0",
     "langchain>=0.0.267",
     "langchain-community>=0.0.10",
-    "matplotlib>=3.7.1",
-    "numpy>=1.23.5",
-    "openai==0.28.0",
-    "pandas>=1.5.3",
-    "Pillow>=9.5.0",
     "python-dotenv>=1.0.0",
-    "scikit-learn>=1.2.2",
-    "streamlit>=1.25.0",
-    "geopy>=2.4.1",
-    "torch>=2.0.0",
-    "transformers>=4.30.0",
+    "requests>=2.31.0",
+    "tqdm>=4.65.0",
+    "geopy==2.4.1",
     "opencv-python>=4.5.0",
+    "ImageHash>=4.3.1",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
-    "black>=23.0.0",
-    "flake8>=6.0.0",
-    "isort>=5.12.0",
-    "mypy>=1.0.0",
+    "ruff>=0.1.0",
 ]
 test = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
 ]
 
-[project.urls]
-Homepage = "https://github.com/your-username/LightlyGPT"
-Repository = "https://github.com/your-username/LightlyGPT"
-Documentation = "https://github.com/your-username/LightlyGPT#readme"
-"Bug Tracker" = "https://github.com/your-username/LightlyGPT/issues"
-
-[project.scripts]
-lightlygpt = "lightlygpt.app:main"
-
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["lightlygpt*"]
-exclude = ["tests*"]
-
-[tool.black]
+[tool.ruff]
 line-length = 88
-target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
-include = '\.pyi?$'
-extend-exclude = '''
-/(
-  # directories
-  \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | build
-  | dist
-)/
-'''
+target-version = "py38"
 
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-line_length = 88
-known_first_party = ["lightlygpt"]
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+ignore = ["E501"]  # Line too long (handled by formatter)
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-python_files = ["test_*.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
-addopts = [
-    "--strict-markers",
-    "--strict-config",
-    "--cov=src/lightlygpt",
-    "--cov-report=term-missing:skip-covered",
-    "--cov-report=html:htmlcov",
-    "--cov-fail-under=80",
-]
-markers = [
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-    "integration: marks tests as integration tests",
-]
+python_files = "test_*.py"
+python_functions = "test_*"
+addopts = "-v --tb=short"
 
-[tool.mypy]
-python_version = "3.8"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-disallow_untyped_decorators = true
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-warn_no_return = true
-warn_unreachable = true
-strict_equality = true
-
-[[tool.mypy.overrides]]
-module = [
-    "streamlit.*",
-    "langchain.*",
-    "chromadb.*",
-    "transformers.*",
-    "torch.*",
-    "cv2.*",
-    "matplotlib.*",
-    "sklearn.*",
-]
-ignore_missing_imports = true
-
-[tool.coverage.run]
-source = ["src/lightlygpt"]
-omit = [
-    "*/tests/*",
-    "*/__pycache__/*",
-    "*/venv/*",
-    "*/.venv/*",
-]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "if self.debug:",
-    "if settings.DEBUG",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if 0:",
-    "if __name__ == .__main__.:",
-    "class .*\\bProtocol\\):",
-    "@(abc\\.)?abstractmethod",
-]
+[project.scripts]
+lightly-gpt = "lightlygpt.run:main"

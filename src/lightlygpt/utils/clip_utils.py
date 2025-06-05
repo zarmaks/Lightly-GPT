@@ -1,11 +1,11 @@
 # CLIP model loading and embedding utilities
 
-import torch
-import streamlit as st
-from transformers import CLIPProcessor, CLIPModel
-from PIL import Image
-
 import warnings
+
+import streamlit as st
+import torch
+from PIL import Image
+from transformers import CLIPModel, CLIPProcessor
 
 warnings.filterwarnings("ignore", message=".*use_column_width.*")
 
@@ -78,4 +78,7 @@ def generate_text_embedding(query_text):
 
 def rgb_to_hex(rgb):
     """Convert an RGB tuple to a hex string."""
-    return "#{:02x}{:02x}{:02x}".format(*rgb)
+    return "#{:02x}{:02x}{:02x}".format(int(rgb[0]), int(rgb[1]), int(rgb[2]))
+
+
+

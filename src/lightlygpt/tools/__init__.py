@@ -1,8 +1,16 @@
 # CLIP-based image analysis tools package
 # These tools provide various image analysis functions for use with LangChain agents
 
-from ..utils import setup_project_path
-from ..utils.path_utils import check_dependency
+try:
+    from ..utils import setup_project_path
+    from ..utils.path_utils import check_dependency
+except ImportError:
+    # Fallback for cases where relative imports don't work (e.g., in tests)
+    import os
+    import sys
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from lightlygpt.utils import setup_project_path
+    from lightlygpt.utils.path_utils import check_dependency
 
 # Ensure the project root is in the Python path
 setup_project_path()

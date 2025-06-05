@@ -144,3 +144,6 @@ chroma_db/
 uploads/
 generated/
 output/
+
+# ruff
+.ruff_cache/

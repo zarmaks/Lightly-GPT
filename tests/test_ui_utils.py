@@ -1,5 +1,6 @@
 import types
-import utils.ui_utils as ui_utils
+
+import lightlygpt.utils.ui_utils as ui_utils
 
 
 def test_format_agent_response():

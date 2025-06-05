@@ -1,29 +1,28 @@
 # Tools for working with image EXIF data and metadata
 
-import streamlit as st
-import sys
-import os
+import warnings
 from datetime import datetime
-from PIL import Image, ExifTags
+
+import streamlit as st
+from PIL import ExifTags, Image
+
+from ..utils import setup_project_path
 from ..utils.session_utils import get_active_indices
 
-import warnings
+# Ensure project path is set up
+setup_project_path()
 
 warnings.filterwarnings("ignore", message=".*use_column_width.*")
 # Try to import geopy with error handling
 try:
-    from geopy.geocoders import Nominatim
     from geopy.distance import geodesic
-
+    from geopy.geocoders import Nominatim
     GEOPY_AVAILABLE = True
 except ImportError:
     st.warning(
         "geopy package not installed. Location-based filtering will be disabled."
     )
     GEOPY_AVAILABLE = False
-
-# Add parent directory to path to enable imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def extract_exif_data(img):
