@@ -7,7 +7,7 @@ name = "lightlygpt"
 version = "1.0.0"
 description = "AI-powered image analysis tool built in collaboration with Lightly.ai"
 readme = "README.md"
-requires-python = ">=3.9,!=3.9.7"
+requires-python = ">=3.9,!=3.9.7,<3.13"
 authors = [
     {name = "Your Name", email = "your.email@example.com"},
 ]
@@ -50,7 +50,7 @@ test = [
 
 [tool.ruff]
 line-length = 88
-target-version = "py38"
+target-version = "py39"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W"]
