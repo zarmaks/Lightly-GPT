@@ -1,3 +1,4 @@
+-e .
 streamlit>=1.39.0
 torch>=2.5.0
 torchvision>=0.20.0
