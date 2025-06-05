@@ -48,6 +48,11 @@ initialize_session_state()
 # Validate files in session state
 validate_session_files()
 
+# Display ChromaDB status in sidebar for debugging (only in development/debug mode)
+if st.sidebar.checkbox("Show Debug Info", value=False):
+    from .utils.session_utils import display_chromadb_status
+    display_chromadb_status()
+
 # Main title
 st.title("🔆 LightlyGPT - Agentic AI tool for Image Analysis")
 
@@ -135,11 +140,15 @@ if st.session_state.uploaded_images:
     st.subheader(f"📊 Uploaded Images ({len(st.session_state.uploaded_images)})")
 
     # Use our custom UI utility for displaying images in a grid
-    display_image_grid(st.session_state.uploaded_images, num_columns=4)
-
-    # Process button
+    display_image_grid(st.session_state.uploaded_images, num_columns=4)    # Process button
     if not st.session_state.processed:
         if st.button("Process Images with CLIP"):
+            # Check if ChromaDB client is available
+            if not hasattr(st.session_state, "chroma_client") or st.session_state.chroma_client is None:
+                st.error("❌ ChromaDB client not available. Cannot process images.")
+                st.info("💡 This is usually due to SQLite version compatibility in Streamlit Cloud.")
+                st.stop()
+                
             with st.spinner("Processing images with CLIP..."):
                 # Ensure CLIP model is loaded
                 if ensure_clip_model_loaded():

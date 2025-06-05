@@ -61,6 +61,13 @@ def create_tsne_visualization(selection_or_n_clusters="3"):
     ):
         return "No image collection found. Please process images first."
 
+    # Check if ChromaDB client is available
+    if (
+        not hasattr(st.session_state, "chroma_client")
+        or st.session_state.chroma_client is None
+    ):
+        return "ChromaDB client not available. Please check your SQLite version compatibility."
+
     if (
         not hasattr(st.session_state, "uploaded_images")
         or not st.session_state.uploaded_images
@@ -170,6 +177,13 @@ def create_image_clusters(n_clusters_str="4"):
         or st.session_state.collection is None
     ):
         return "No image collection found. Please process images first."
+
+    # Check if ChromaDB client is available
+    if (
+        not hasattr(st.session_state, "chroma_client")
+        or st.session_state.chroma_client is None
+    ):
+        return "ChromaDB client not available. Please check your SQLite version compatibility."
 
     if (
         not hasattr(st.session_state, "uploaded_images")
